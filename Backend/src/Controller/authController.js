@@ -1,3 +1,4 @@
+import cloudnary from "../Config/cloudnary.js";
 import { generateToken } from "../Config/jwt.js";
 import User from "../Model/user.model.js"
 import bcrypt from "bcryptjs"
@@ -57,7 +58,7 @@ const login = async (req, res) => {
 
         const isPasswordCorrect = await bcrypt.compare(password, user.password);
         if (!isPasswordCorrect) {
-            return res.status(400).json({ message: "Invalid credentials"});
+            return res.status(400).json({ message: "Invalid credentials" });
         }
 
         generateToken(user._id, res);
@@ -76,7 +77,7 @@ const login = async (req, res) => {
 
 const logout = async (req, res) => {
     try {
-        res.cookie("jwt", "", { maxAge: 0} );
+        res.cookie("jwt", "", { maxAge: 0 });
         res.status(200).json({ message: "Logged out successfully" });
     } catch (error) {
         console.log("Error in logout controller", error.message);
@@ -85,11 +86,32 @@ const logout = async (req, res) => {
 }
 
 
-const updateProfile =async (req, res) => {
+const updateProfile = async (req, res) => {
     try {
-        
+        const { profilePic } = req.body;
+        const userId = req.user._id;
+
+        if (!profilePic) {
+            return res.status(400).json({ message: "Profile pic is required" });
+        }
+
+        const uploadResponse = await cloudnary.uploader.upload(profilePic);
+
+        const updateUser = await User.findByIdAndUpdate(userId, { profilePic: uploadResponse.secure_url }, { new: true });
+
+        res.status(200).json(updateUser);
     } catch (error) {
-        
+        console.log("Error in update profile", error.message);
+        res.status(500).json({ message: "Internal Server Error" })
+    }
+}
+
+const verify = async (req, res) => {
+    try {
+        res.status(200).json(req.user);
+    } catch (error) {
+        console.log("Error in checkAuth controller", error.message);
+        res.status(500).json({ message: "Internal Server Error" })
     }
 }
 
@@ -98,5 +120,6 @@ export default {
     signup,
     login,
     logout,
-    updateProfile
+    updateProfile,
+    verify
 }

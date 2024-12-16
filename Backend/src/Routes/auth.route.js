@@ -8,5 +8,6 @@ router.post("/signup", authController.signup)
 router.post("/login", authController.login)
 router.post("/logout", authController.logout)
 router.put('/update-profile', protect, authController.updateProfile)
+router.get('/verify', protect, authController.verify)
 
 export default router
