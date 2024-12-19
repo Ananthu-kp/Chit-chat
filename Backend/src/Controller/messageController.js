@@ -1,4 +1,5 @@
 import cloudnary from "../Config/cloudnary.js";
+import { getReceiverSocketId, io } from "../Config/socket.js";
 import Message from "../Model/message.model.js";
 import User from "../Model/user.model.js";
 
@@ -55,6 +56,12 @@ const sendMessages = async(req, res) => {
         });
 
         await newMessage.save();
+
+        const receiverSocketId = getReceiverSocketId(receiverId)
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("newMessage", newMessage)
+        }
+
         res.status(201).json(newMessage);
 
     } catch (error) {
